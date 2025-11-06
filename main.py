@@ -33,27 +33,35 @@ class CSV:
     @classmethod
     def get_transactions(cls, start_date, end_date):
         df = pd.read_csv(cls.CSV_FILE)
-        df["date"] = pd.to_datetime(df["date"], format=CSV.FORMAT)
+        # Parse dates with the expected format; coerce invalid dates to NaT
+        df["Date"] = pd.to_datetime(df["Date"], format=CSV.FORMAT, errors="coerce")
+        # Count and optionally inform about invalid date rows
+        invalid_dates = df["Date"].isna().sum()
+
         start_date = datetime.strptime(start_date, CSV.FORMAT)
         end_date = datetime.strptime(end_date, CSV.FORMAT)
 
-        mask = (df["date"] >= start_date) & (df["date"] <= end_date)
-        filtered_df = df.loc[mask]
+        # Filter only valid dated rows first
+        valid_df = df.dropna(subset=["Date"]).copy()
+        mask = (valid_df["Date"] >= start_date) & (valid_df["Date"] <= end_date)
+        filtered_df = valid_df.loc[mask]
 
         if filtered_df.empty:
             print("No transactions found between the specified dates.")
         else:
             print(
                 f"Transactions from {start_date.strftime(CSV.FORMAT)} to {end_date.strftime(CSV.FORMAT)}"
-                )
+            )
+            if invalid_dates:
+                print(f"Note: {invalid_dates} row(s) had invalid dates and were skipped.")
             print(
                 filtered_df.to_string(
-                    index=False, formatters={"date": lambda x: x.strftime(CSV.FORMAT)}
+                    index=False, formatters={"Date": lambda x: x.strftime(CSV.FORMAT)}
                 )
             )
 
-            total_income = filtered_df[filtered_df["category"] == "Income"]["amount"].sum()
-            total_expense = filtered_df[filtered_df["category"] == "Expense"]["amount"].sum()
+            total_income = filtered_df[filtered_df["Category"] == "Income"]["Amount"].sum()
+            total_expense = filtered_df[filtered_df["Category"] == "Expense"]["Amount"].sum()
             print("\nSummary:")
             print(f"Total Income: £{total_income:.2f}")
             print(f"Total Expense: £{total_expense:.2f}")
@@ -67,5 +75,24 @@ def add():
     description = get_description()
     CSV.add_entry(date, amount, category, description)
 
+def main():
+    while True:
+        print("\n1. Add a new transaction")
+        print("2. View transactions")
+        print("3. Exit")
+        choice = input("Enter your choice: ")
 
-add()
+        if choice == "1":
+            add()
+        elif choice == "2":
+            start_date = input("Enter the start date (DD-MM-YYYY): ")
+            end_date = input("Enter the end date (DD-MM-YYYY): ")
+            df = CSV.get_transactions(start_date, end_date)
+        elif choice == "3":
+            print("Exiting...")
+            break
+        else:
+            print("Invalid choice. Please enter a valid option.")
+
+if __name__ == "__main__":
+    main()
