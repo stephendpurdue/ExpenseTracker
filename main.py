@@ -52,15 +52,6 @@ class CSV:
                 )
             )
 
-            total_income = filtered_df[filtered_df["category"] == "Income"]["amount"].sum()
-            total_expense = filtered_df[filtered_df["category"] == "Expense"]["amount"].sum()
-            print("\nSummary:")
-            print(f"Total income: £{total_income.2f}")
-            print(f"total_expense: £{total_expense.2f}")
-            print(f"net_savings: £{(total_income - total_expense):.2f}")
-
-        return filtered_df
-
 def add():
     CSV.initialize_csv()
     date = get_date("Enter the date (DD-MM-YYYY): or press Enter to use today's date:", allow_default=True)
