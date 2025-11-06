@@ -24,7 +24,7 @@ class CSV:
             "Amount": amount,
             "Category": category,
             "Description": description
-        } # Opened CSV file in append mode.
+        } # Opened CSV file in 'append' mode.
         with open(cls.CSV_FILE, mode="a", newline="") as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=cls.COLUMNS)
             writer.writerow(new_entry)
@@ -33,7 +33,7 @@ class CSV:
     @classmethod
     def get_transactions(cls, start_date, end_date):
         df = pd.read_csv(cls.CSV_FILE)
-        df["date"] = pf.to_datetime(df["date"], format=CSV.FORMAT)
+        df["date"] = pd.to_datetime(df["date"], format=CSV.FORMAT)
         start_date = datetime.strptime(start_date, CSV.FORMAT)
         end_date = datetime.strptime(end_date, CSV.FORMAT)
 
@@ -51,6 +51,13 @@ class CSV:
                     index=False, formatters={"date": lambda x: x.strftime(CSV.FORMAT)}
                 )
             )
+
+            total_income = filtered_df[filtered_df["category"] == "Income"]["amount"].sum()
+            total_expense = filtered_df[filtered_df["category"] == "Expense"]["amount"].sum()
+            print("\nSummary:")
+            print(f"Total Income: £{total_income:.2f}")
+            print(f"Total Expense: £{total_expense:.2f}")
+            print(f"Net Savings £{(total_income - total_expense):.2f}")
 
 def add():
     CSV.initialize_csv()
